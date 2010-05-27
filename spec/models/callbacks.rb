@@ -21,3 +21,14 @@ class Song
   field :title
   embedded_in :artist, :inverse_of => :songs
 end
+
+class ValidationCallback
+  include Mongoid::Document
+  field :history, :type => Array, :default => []
+  validate do
+    self.history << :validate
+  end
+
+  before_validate { self.history << :before_validation }
+  after_validate { self.history << :after_validation }
+end
