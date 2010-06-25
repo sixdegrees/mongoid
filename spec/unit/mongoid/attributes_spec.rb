@@ -317,6 +317,23 @@ describe Mongoid::Attributes do
 
       end
 
+      context "when association is a references_one" do
+
+        before do
+          @game = Game.new(:score => 100)
+          @attributes = {
+            :game => @game
+          }
+          @person = Person.new(@attributes)
+        end
+
+        it "sets the associations" do
+          @person.game.should == @game
+          @game.person.should == @person
+        end
+
+      end
+
       context "when association is a embedded_in" do
 
         before do
@@ -419,6 +436,29 @@ describe Mongoid::Attributes do
       end
     end
 
+  end
+  
+  describe "#attribute_present?" do
+    context "when attribute does not exist" do
+      before do
+        @person = Person.new
+      end
+      
+      it "returns false" do
+        @person.attribute_present?(:owner_id).should be_false
+      end
+    end
+    
+    context "when attribute does exist" do
+      before do
+        @person = Person.new
+        @person.owner_id = 5
+      end
+      
+      it "returns true" do
+        @person.attribute_present?(:owner_id).should be_true
+      end
+    end
   end
 
   describe "#remove_attribute" do

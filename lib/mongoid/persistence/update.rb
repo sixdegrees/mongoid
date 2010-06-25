@@ -39,11 +39,15 @@ module Mongoid #:nodoc:
       #
       # +true+ or +false+, depending on validation.
       def persist
-        return false if validate && !@document.valid?
+        return false if validate && @document.invalid?(:update)
         @document.run_callbacks(:save) do
           @document.run_callbacks(:update) do
             if update
               @document.move_changes
+              @document._children.each do |child|
+                child.move_changes
+                child.new_record = false if child.new_record?
+              end
             else
               return false
             end
@@ -54,8 +58,9 @@ module Mongoid #:nodoc:
       protected
       # Update the document in the database atomically.
       def update
-        if @document.changed?
-          @collection.update(@document._selector, { "$set" => @document.setters }, @options.merge(:multi => false))
+        updates = @document._updates
+        unless updates.empty?
+          @collection.update(@document._selector, updates, @options.merge(:multi => false))
         end; true
       end
     end

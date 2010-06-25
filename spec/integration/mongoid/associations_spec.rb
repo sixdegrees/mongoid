@@ -3,10 +3,7 @@ require "spec_helper"
 describe Mongoid::Associations do
 
   before do
-    Person.delete_all
-    Game.delete_all
-    Post.delete_all
-    Preference.delete_all
+    [ Artist, Person, Game, Post, Preference ].each { |klass| klass.collection.remove }
   end
 
   context "anonymous extensions" do
@@ -53,6 +50,50 @@ describe Mongoid::Associations do
       artist.songs.size.should == 2
       artist.songs.first.title.should == "0"
       artist.songs.last.title.should == "1"
+    end
+  end
+
+  context "passing a relational child to the parent constructor" do
+
+    before do
+      @game = Game.new(:score => 1)
+      @person = Person.new(:title => "Sir", :game => @game)
+      @person.save
+    end
+
+    it "sets the association on save" do
+      @from_db = Person.find(@person.id)
+      @from_db.game.should == @game
+    end
+
+    it "sets the reverse association before save" do
+      @game.person.should == @person
+    end
+
+    it "sets the reverse association after save" do
+      @from_db = Game.find(@game.id)
+      @game.person.should == @person
+    end
+  end
+
+  context "creation of an embedded association via create" do
+
+    context "when passed a parent" do
+
+      before do
+        @artist = Artist.new(:name => "Placebo")
+        @label = Label.create(:artist => @artist, :name => "Island")
+      end
+
+      it "saves the parent and the child" do
+        from_db = Artist.find(@artist.id)
+        from_db.labels.first.should == @label
+      end
+
+      it "does not save the child more than once" do
+        from_db = Artist.find(@artist.id)
+        from_db.labels.size.should == 1
+      end
     end
   end
 
@@ -119,6 +160,7 @@ describe Mongoid::Associations do
         @account.creator.should == @user
       end
     end
+
   end
 
   context "one-to-many relational associations" do

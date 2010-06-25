@@ -24,10 +24,10 @@ module Mongoid #:nodoc:
       # association, and the attributes will be passed into the constructor.
       #
       # Returns the newly created object.
-      def build(attributes = {})
+      def build(attributes = nil)
         load_target
         name = @parent.class.to_s.underscore
-        object = @klass.instantiate(attributes.merge(name => @parent))
+        object = @klass.instantiate((attributes || {}).merge(name => @parent))
         @target << object
         object
       end
@@ -78,9 +78,10 @@ module Mongoid #:nodoc:
 
       # Finds a document in this association.
       # If an id is passed, will return the document for that id.
-      def find(*args)
-        args[1][:conditions].merge!(@foreign_key.to_sym => @parent.id) if args.size > 1
-        @klass.find(*args)
+      def find(id_or_type, options = {})
+        return self.id_criteria(id_or_type) unless id_or_type.is_a?(Symbol)
+        options[:conditions] = (options[:conditions] || {}).merge(@foreign_key.to_sym => @parent.id)
+        @klass.find(id_or_type, options)
       end
 
       # Initializing a related association only requires looking up the objects
@@ -109,6 +110,32 @@ module Mongoid #:nodoc:
       def method_missing(name, *args, &block)
         @target = query.call unless @target.is_a?(Array)
         @target.send(name, *args, &block)
+      end
+
+      # Used for setting associations via a nested attributes setter from the
+      # parent +Document+.
+      #
+      # Options:
+      #
+      # attributes: A +Hash+ of integer keys and +Hash+ values.
+      #
+      # Returns:
+      #
+      # The newly build target Document.
+      def nested_build(attributes, options = {})
+        attributes.each do |index, attrs|
+          begin
+            document = find(index.to_i)
+            if options && options[:allow_destroy] && attrs['_destroy']
+              @target.delete(document)
+              document.destroy
+            else
+              document.write_attributes(attrs)
+            end
+          rescue Errors::DocumentNotFound
+            build(attrs)
+          end
+        end
       end
 
       protected

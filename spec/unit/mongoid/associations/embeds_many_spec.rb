@@ -126,6 +126,25 @@ describe Mongoid::Associations::EmbedsMany do
 
   end
 
+  context "#count and #size" do
+
+    before do
+      @association = Mongoid::Associations::EmbedsMany.new(
+        @document,
+        Mongoid::Associations::Options.new(:name => :addresses)
+      )
+      @association.target.first.new_record = true
+    end
+
+    it "count returns the number of persisted elements" do
+      @association.count.should == 1
+    end
+
+    it "size returns the total number of elements" do
+      @association.size.should == 2
+    end
+  end
+
   describe "#create" do
 
     context "when a type is not provided" do
@@ -195,7 +214,9 @@ describe Mongoid::Associations::EmbedsMany do
           @document,
           Mongoid::Associations::Options.new(:name => :addresses)
         )
-        @address = mock(:parentize => true, :write_attributes => true, :errors => [ "test" ], :_index= => true)
+        @errors  = mock(:full_messages => ["test"], :empty? => false)
+        @address = mock(:parentize => true, :write_attributes => true, :_index= => true)
+        @address.expects(:errors).twice.returns(@errors)
         Address.expects(:instantiate).returns(@address)
       end
 
@@ -472,13 +493,13 @@ describe Mongoid::Associations::EmbedsMany do
         Mongoid::Associations::Options.new(:name => :addresses)
       )
     end
-    
+
     it "should update existing documents" do
       @association.nested_build({ "0" => { :street => "Yet Another" } })
       @association.size.should == 2
       @association[0].street.should == "Yet Another"
     end
-    
+
     it "should create new documents" do
       @association.nested_build({ "2" => { :street => "Yet Another" } })
       @association.size.should == 3

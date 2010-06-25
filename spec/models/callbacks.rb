@@ -2,6 +2,7 @@ class Artist
   include Mongoid::Document
   field :name
   embeds_many :songs
+  embeds_many :labels
 
   before_create :before_create_stub
   after_create :create_songs
@@ -20,4 +21,27 @@ class Song
   include Mongoid::Document
   field :title
   embedded_in :artist, :inverse_of => :songs
+end
+
+class Label
+  include Mongoid::Document
+  field :name
+  embedded_in :artist, :inverse_of => :labels
+  before_validation :cleanup
+
+  private
+  def cleanup
+    self.name = self.name.downcase.capitalize
+  end
+end
+
+class ValidationCallback
+  include Mongoid::Document
+  field :history, :type => Array, :default => []
+  validate do
+    self.history << :validate
+  end
+
+  before_validation { self.history << :before_validation }
+  after_validation { self.history << :after_validation }
 end

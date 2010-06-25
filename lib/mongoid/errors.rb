@@ -2,6 +2,9 @@
 module Mongoid #:nodoc
   module Errors #:nodoc
 
+    # Default parent Mongoid error for all custom errors
+    class MongoidError < StandardError; end
+
     # Raised when querying the database for a document by a specific id which
     # does not exist. If multiple ids were passed then it will display all of
     # those.
@@ -9,12 +12,12 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>DocumentNotFound.new(Person, ["1", "2"])</tt>
-    class DocumentNotFound < RuntimeError
+    class DocumentNotFound < MongoidError
+      attr_reader :klass, :indentifiers
       def initialize(klass, ids)
-        @klass, @identifier = klass, ids.is_a?(Array) ? ids.join(", ") : ids
-      end
-      def message
-        "Document not found for class #{@klass} and id(s) #{@identifier}"
+        @klass = klass
+        @identifiers = ids.is_a?(Array) ? ids.join(", ") : ids
+        super("Document not found for class #{@klass} with id(s) #{@identifiers}")
       end
     end
 
@@ -23,7 +26,7 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>InvalidOptions.new</tt>
-    class InvalidOptions < RuntimeError; end
+    class InvalidOptions < MongoidError; end
 
     # Raised when the database connection has not been set up properly, either
     # by attempting to set an object on the db that is not a +Mongo::DB+, or
@@ -32,12 +35,11 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>InvalidDatabase.new("Not a DB")</tt>
-    class InvalidDatabase < RuntimeError
+    class InvalidDatabase < MongoidError
+      attr_reader :database
       def initialize(database)
         @database = database
-      end
-      def message
-        "Database should be a Mongo::DB, not #{@database.class.name}"
+        super("Database should be a Mongo::DB, not #{@database.class.name}")
       end
     end
 
@@ -46,12 +48,9 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>UnsupportedVersion.new(Mongo::ServerVersion.new("1.3.1"))</tt>
-    class UnsupportedVersion < RuntimeError
+    class UnsupportedVersion < MongoidError
       def initialize(version)
-        @version = version
-      end
-      def message
-        "MongoDB #{@version} not supported, please upgrade to #{Mongoid::MONGODB_VERSION}"
+        super("MongoDB #{version} not supported, please upgrade to #{Mongoid::MONGODB_VERSION}")
       end
     end
 
@@ -61,12 +60,11 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>Validations.new(person.errors)</tt>
-    class Validations < RuntimeError
-      def initialize(errors)
-        @errors = errors
-      end
-      def message
-        "Validation Failed: " + @errors.full_messages.join(", ")
+    class Validations < MongoidError
+      attr_reader :document
+      def initialize(document)
+        @document = document
+        super("Validation Failed: #{@document.errors.full_messages.join(", ")}")
       end
     end
 
@@ -76,14 +74,13 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>InvalidCollection.new(Address)</tt>
-    class InvalidCollection < RuntimeError
+    class InvalidCollection < MongoidError
+      attr_reader :klass
       def initialize(klass)
         @klass = klass
-      end
-      def message
-        "Access to the collection for #{@klass.name} is not allowed " +
-          "since it is an embedded document, please access a collection from " +
-          "the root document"
+        super("Access to the collection for #{@klass.name} is not allowed " +
+              "since it is an embedded document, please access a collection from " +
+              "the root document")
       end
     end
 
@@ -93,15 +90,14 @@ module Mongoid #:nodoc
     # Example:
     #
     # <tt>InvalidField.new('collection')</tt>
-    class InvalidField < RuntimeError
+    class InvalidField < MongoidError
+      attr_reader :name
       def initialize(name)
         @name = name
-      end
-      def message
-        "Defining a field named '#{@name}' is not allowed. " +
-          "Do not define fields that conflict with Mongoid internal attributes " +
-          "or method names. Use Document#instance_methods to see what " +
-          "names this includes."
+        super("Defining a field named '#{@name}' is not allowed. " +
+              "Do not define fields that conflict with Mongoid internal attributes " +
+              "or method names. Use Document#instance_methods to see what " +
+              "names this includes.")
       end
     end
 
@@ -111,13 +107,11 @@ module Mongoid #:nodoc
     # Example:
     #
     #<tt>TooManyNestedAttributeRecords.new('association', limit)
-    class TooManyNestedAttributeRecords < RuntimeError
+    class TooManyNestedAttributeRecords < MongoidError
+      attr_reader :association, :limit
       def initialize(association, limit)
-        @association = association.to_s.humanize.capitalize
-        @limit = limit
-      end
-      def message
-        "Accept Nested Attributes for #{@association} is limited to #{@limit} records"
+        @association, @limit = association.to_s.humanize.capitalize, limit
+        super("Accept Nested Attributes for #{@association} is limited to #{@limit} records")
       end
     end
   end

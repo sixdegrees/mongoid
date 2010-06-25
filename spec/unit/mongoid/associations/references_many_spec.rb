@@ -126,6 +126,14 @@ describe Mongoid::Associations::ReferencesMany do
       @association.build(:title => "Sassy")
       @association.first.person.should == @parent
     end
+
+    context "when passing nil" do
+
+      it "builds an object with empty attributes" do
+        @association.build(nil)
+        @association.first.person.should == @parent
+      end
+    end
   end
 
   describe "#delete_all" do
@@ -278,11 +286,10 @@ describe Mongoid::Associations::ReferencesMany do
       end
 
       it "returns the document in the array with that id" do
-        Post.expects(:find).with("5").returns(@post)
+        @association.expects(:id_criteria).with("5").returns(@post)
         post = @association.find("5")
         post.should == @post
       end
-
     end
 
     context "when finding all with conditions" do
@@ -381,6 +388,34 @@ describe Mongoid::Associations::ReferencesMany do
 
     it "returns :references_many" do
       Mongoid::Associations::ReferencesMany.macro.should == :references_many
+    end
+
+  end
+
+  describe "#nested_build" do
+
+    before do
+      @parent = stub(:id => "1", :new_record? => false, :class => Person)
+
+      @first = Post.new(:id => 0)
+      @second = Post.new(:id => 1)
+      @related = [@first, @second]
+      Post.expects(:all).returns(@related)
+      @association = Mongoid::Associations::ReferencesMany.new(@parent, options)
+    end
+
+    it "should update existing documents" do
+      @association.expects(:find).with(0).returns(@first)
+      @association.nested_build({ "0" => { :title => "Yet Another" } })
+      @association.size.should == 2
+      @association[0].title.should == "Yet Another"
+    end
+
+    it "should create new documents" do
+      @association.expects(:find).with(2).raises(Mongoid::Errors::DocumentNotFound.new(Post, 2))
+      @association.nested_build({ "2" => { :title => "Yet Another" } })
+      @association.size.should == 3
+      @association[2].title.should == "Yet Another"
     end
 
   end

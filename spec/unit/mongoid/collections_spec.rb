@@ -47,6 +47,29 @@ describe Mongoid::Collections do
     end
   end
 
+  describe ".index_information" do
+
+    it "returns index information from the collection" do
+      Person.index_information["title_1"].should_not be_nil
+    end
+  end
+
+  describe ".logger=" do
+
+    before do
+      @logger = stub.quacks_like(Logger.allocate)
+      Person.logger = @logger
+    end
+
+    after do
+      Person.logger = nil
+    end
+
+    it "sets the logger on the connection" do
+      Person.db.connection.logger.should == @logger
+    end
+  end
+
   describe ".store_in" do
 
     context "on a parent class" do

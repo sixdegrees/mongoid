@@ -19,12 +19,6 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-require "rubygems"
-
-gem "activemodel", "3.0.0.beta3"
-gem "will_paginate", "3.0.pre"
-gem "mongo", "~>1.0.1"
-gem "bson", "~>1.0.1"
 
 require "delegate"
 require "singleton"
@@ -48,6 +42,7 @@ require "will_paginate/collection"
 require "mongo"
 require "mongoid/observable"
 require "mongoid/associations"
+require "mongoid/atomicity"
 require "mongoid/attributes"
 require "mongoid/callbacks"
 require "mongoid/collection"
@@ -65,6 +60,7 @@ require "mongoid/factory"
 require "mongoid/field"
 require "mongoid/fields"
 require "mongoid/finders"
+require "mongoid/hierarchy"
 require "mongoid/identity"
 require "mongoid/indexes"
 require "mongoid/javascript"
@@ -79,7 +75,13 @@ require "mongoid/timestamps"
 require "mongoid/validations"
 require "mongoid/versioning"
 require "mongoid/components"
+require "mongoid/paranoia"
 require "mongoid/document"
+
+# add railtie
+if defined?(Rails)
+  require "mongoid/railtie"
+end
 
 module Mongoid #:nodoc
 
