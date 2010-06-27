@@ -302,6 +302,24 @@ describe Mongoid::Document do
 
   end
 
+  context "when address is a has one with update_attribute" do
+
+    before do
+      @owner = PetOwner.create(:title => "AKC")
+      @owner.update_attributes!(:address => {:street => 'Fido Street'})
+    end
+
+    after do
+      PetOwner.delete_all
+    end
+
+    it "is a single object and not an array" do
+      @from_db = PetOwner.find(@owner.id)
+      @from_db.address.street.should == 'Fido Street'
+    end
+
+  end
+
   describe "#inspect" do
 
     context "with allow_dynamic_fields = false" do
