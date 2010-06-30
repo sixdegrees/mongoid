@@ -45,24 +45,25 @@ describe Mongoid::Associations do
       end
 
       describe "updating associated document" do
-        let(:person) { Person.create!( :ssn => "1234", :favorites => [{ :title => 'nothing' }]) }
-        before { person.update_attributes(:favorites_attributes => {'0' => { :title => 'something' } } ) }
+        let(:person) { Person.create!( :ssn => "1234", :favorites => { '0' => { :title => 'nothing' } } ) }
+        before do
+          person.update_attributes(:favorites_attributes => { '0' => { :title => 'something' } } )
+        end
         specify { person.reload.favorites.first.title.should == 'something' }
       end
     end
 
     context "with a normal hash" do
       describe "creating associated document" do
-        let(:person) { Person.create!( :ssn => "1234", :favorites => [{ :title => 'something' }] ) }
+        let(:person) { Person.create!( :ssn => "1234", :favorites => { '0' => { :title => 'something' } } ) }
         specify { person.reload.favorites.first.title.should == 'something' }
       end
 
       describe "updating associated document" do
-        let(:person) { x = Person.create!( :ssn => "1234", :favorites => [{ :title => 'nothing' }] ) ; p x ; x }
-        before { person.update_attributes(:favorites => [{ :title => 'something' }, {:title => 'hello'}]) }
+        let(:person) { Person.create!( :ssn => "1234", :favorites => { '0' => { :title => 'nothing' } } ) }
+        before { person.update_attributes(:favorites => { '0' => { :title => 'something' } } ) }
         specify { person.reload.favorites.first.title.should == 'something' }
       end
     end
   end
-
 end
