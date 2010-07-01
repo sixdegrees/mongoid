@@ -82,4 +82,31 @@ describe Mongoid::Dirty do
       @person.setters.should_not == {"addresses" => nil}
     end
   end
+
+  context "with an embeds_one association" do
+    before do
+      @person = Person.create(:title => "MC", :ssn => "234-11-2533")
+    end
+
+    it 'should mark change in embeds_one if change' do
+      @person.pet = Pet.new(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark change in embeds_one add with build method' do
+      @person.build_pet(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark change in embeds_one add with create method' do
+      @person.create_pet(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark no change in embeds_one if change and delete after' do
+      @person.pet = Pet.new(:name => 'mustache')
+      @person.pet = nil
+      @person.changes.should == {}
+    end
+  end
 end
