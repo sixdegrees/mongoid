@@ -108,5 +108,11 @@ describe Mongoid::Dirty do
       @person.pet = nil
       @person.changes.should == {}
     end
+
+    it 'should reset changes from dirty after save document' do
+      @person.build_pet(:name => 'mustache')
+      @person.save
+      @person.changes.should == {}
+    end
   end
 end
