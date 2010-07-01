@@ -38,7 +38,9 @@ module Mongoid #:nodoc:
 
     # Get all the attributes that need to be set.
     def _sets
-      if changed? && !new_record?
+      if embedded_one? && _parent.attribute_changed?(association_name)
+        return { _path => raw_attributes }
+      elsif changed? && !new_record?
         setters
       else
         embedded_one? && new_record? ? { _path => raw_attributes } : {}
