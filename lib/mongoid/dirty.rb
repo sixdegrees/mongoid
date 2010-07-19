@@ -120,8 +120,16 @@ module Mongoid #:nodoc:
     # A +Hash+ of new values.
     def setters
       modifications.inject({}) do |sets, (field, changes)|
-        key = embedded? ? "#{_position}.#{field}" : field
-        sets[key] = changes[1]; sets
+        if associations.keys.include?(field) && associations[field].try(:association) == Mongoid::Associations::EmbedsMany
+          changes[1].each do |child|
+            sets[field] ||= []
+            sets[field] << (child.is_a?(Hash) ? child : child.raw_attributes)
+          end
+          sets
+        else
+          key = embedded? ? "#{_position}.#{field}" : field
+          sets[key] = changes[1] ; sets
+        end
       end
     end
 
@@ -223,9 +231,22 @@ module Mongoid #:nodoc:
     # <tt>person.modify("name", "Jack", "John")</tt>
     def modify(name, old_value, new_value)
       @attributes[name] = new_value
+      update_modification_data(name, old_value, new_value)
+    end
+
+    def update_modification_data(name, old_value, new_value)
       if @modifications && (old_value != new_value)
         original = @modifications[name].first if @modifications[name]
         @modifications[name] = [ (original || old_value), new_value ]
+      end
+    end
+
+    def add_modification_data(name, old_value, new_value)
+      if (old_value != new_value)
+        @modifications ||= {}
+        original = @modifications[name] ? @modifications[name].first : []
+        new_data = @modifications[name] ? @modifications[name].second : []
+        @modifications[name] = [ (original + old_value), (new_data + new_value) ]
       end
     end
 

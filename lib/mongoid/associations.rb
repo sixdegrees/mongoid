@@ -258,7 +258,16 @@ module Mongoid # :nodoc:
         define_method(name) { memoized(name) { type.instantiate(self, options) } }
         define_method("#{name}=") do |object|
           unmemoize(name)
-          memoized(name) { type.update(object, self, options) }
+          memoized(name) {
+            old_value = type.instantiate(self, options)
+            value = type.update(object, self, options)
+            if type == Mongoid::Associations::EmbedsMany
+              add_modification_data(name, old_value, value)
+            else
+              update_modification_data(name, old_value, value)
+            end
+            value
+          }
         end
       end
 
@@ -269,7 +278,11 @@ module Mongoid # :nodoc:
         define_method("build_#{name}") do |*params|
           attrs = params[0]
           attr_options = params[1] || {}
-          reset(name) { type.new(self, (attrs || {}).stringify_keys, options) } unless type == Associations::EmbedsOne && attr_options[:update_only]
+          reset(name) {
+            value = type.new(self, (attrs || {}).stringify_keys, options)
+            update_modification_data(name, nil, value)
+            value
+          } unless type == Associations::EmbedsOne && attr_options[:update_only]
         end
       end
 

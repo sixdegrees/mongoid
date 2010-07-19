@@ -82,4 +82,88 @@ describe Mongoid::Dirty do
       @person.setters.should_not == {"addresses" => nil}
     end
   end
+
+  context "with an embeds_one association" do
+    before do
+      @person = Person.create(:title => "MC", :ssn => "234-11-2533")
+    end
+
+    it 'should mark change in embeds_one if change' do
+      @person.pet = Pet.new(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark change in embeds_one add with build method' do
+      @person.build_pet(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark change in embeds_one add with create method' do
+      @person.create_pet(:name => 'mustache')
+      @person.changes.should == {'pet' => [nil, @person.pet]}
+    end
+
+    it 'should mark no change in embeds_one if change and delete after' do
+      @person.pet = Pet.new(:name => 'mustache')
+      @person.pet = nil
+      @person.changes.should == {}
+    end
+
+    it 'should reset changes from dirty after save document' do
+      @person.build_pet(:name => 'mustache')
+      @person.save
+      @person.changes.should == {}
+    end
+  end
+
+  context "with an embeds_many association" do
+    before do
+      @person = Person.create(:title => "MC", :ssn => "234-11-2533")
+    end
+
+    it 'should mark change if add only embeds_many by = methods' do
+      @person.favorites = [Favorite.new(:title => 'mongodb')]
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first]]}
+    end
+
+    it 'should mark change if add only embeds_many by = methods and add by << methods' do
+      @person.favorites = [Favorite.new(:title => 'mongodb')]
+      @person.favorites << Favorite.new(:title => 'mongoid')
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first, @person.favorites.second]]}
+    end
+
+    it 'should mark change in embeds_many add with build method' do
+      @person.favorites.build(:title => 'mongodb')
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first]]}
+    end
+
+    it 'should mark change in embeds_many add with build method several times' do
+      @person.favorites.build(:title => 'mongodb')
+      @person.favorites.build(:title => 'mongoid')
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first, @person.favorites.second]]}
+    end
+
+    it 'should mark change in embeds_many add with create method' do
+      @person.favorites.create(:title => 'mongodb')
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first]]}
+    end
+
+    it 'should mark change in embeds_many add with create method several times' do
+      @person.favorites.create(:title => 'mongodb')
+      @person.favorites.create(:title => 'mongoid')
+      @person.changes.should == {'favorites' => [[], [@person.favorites.first, @person.favorites.second]]}
+    end
+
+    it 'should mark no change in embeds_many if change and delete after' do
+      @person.favorites = [Favorite.new(:title => 'mongodb')]
+      @person.favorites = nil
+      @person.changes.should == {}
+    end
+
+    it 'should reset changes from dirty after save document' do
+      @person.favorites = [Favorite.new(:title => 'mongodb')]
+      @person.save
+      @person.changes.should == {}
+    end
+  end
 end
