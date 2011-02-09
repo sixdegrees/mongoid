@@ -36,11 +36,7 @@ module Mongoid #:nodoc:
           criteria = criteria.where(item => document.attributes[item])
         end
         if criteria.exists?
-          document.errors.add(
-            attribute,
-            :taken,
-            options.except(:case_sensistive, :scope).merge(:value => value)
-          )
+          document.errors.add(attribute, :taken, :default => options[:message], :value => value)
         end
       end
 
