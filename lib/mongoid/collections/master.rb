@@ -12,7 +12,12 @@ module Mongoid #:nodoc:
       #
       # <tt>collection.save({ :name => "Al" })</tt>
       Operations::ALL.each do |name|
-        define_method(name) { |*args| collection.send(name, *args) }
+        define_method(name) { |*args|
+          t = Time.now
+          r = collection.send(name, *args)
+          Mongoid.logger.debug("[MONGOID] requete #{name} with query #{args.inspect} => time elapse : #{Time.now - t}s")
+          r
+        }
       end
 
       # Create the new database writer. Will create a collection from the
