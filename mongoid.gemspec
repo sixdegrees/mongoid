@@ -43,7 +43,7 @@ Gem::Specification.new do |s|
   |::::::: 8  | |     8    :::::::::| and indexes are stored.
   |::::::: _._| |_,...8    :::::::::|
   |::::::'~--.   .--. `.   `::::::::| If you were using String
-  |:::::'     =8     ~  \\ o ::::::::| representations of BSON::ObjectIDs
+  |:::::'     =8     ~  \\ o ::::::::| representations of BSON::ObjectIds
   |::::'       8._ 88.   \\ o::::::::| as your document ids, all of your
   |:::'   __. ,.ooo~~.    \\ o`::::::| documents will now need to tell
   |:::   . -. 88`78o/:     \\  `:::::| Mongoid to use Strings like so:
@@ -54,7 +54,7 @@ Gem::Specification.new do |s|
   |:::::.....           ::'     ``::| end
   |::::::::-'`-        88          `|
   |:::::-'.          -       ::     | All ids will default to
-  |:-~. . .                   :     | BSON:ObjectIDs from now on, and
+  |:-~. . .                   :     | BSON:ObjectIds from now on, and
   | .. .   ..:   o:8      88o       | Config#use_object_ids has been
   |. .     :::   8:P     d888. . .  | removed.
   |.   .   :88   88      888'  . .  |
@@ -70,12 +70,12 @@ Gem::Specification.new do |s|
   this for you automatically. If you were using custom composite keys,
   these will need to be defined as Strings since they cannot be converted.
 
-  You can run a rake task to convert all your string object ids to ObjectID (thanks to Kyle Banker):
+  You can run a rake task to convert all your string object ids to ObjectId (thanks to Kyle Banker):
 
   rake db:mongoid:objectid_convert
 
   Your old collections will be backed up to their original names appended with "_old".
-  If you verify your site is still working good with the ObjectIDs, you can clean them up using:
+  If you verify your site is still working good with the ObjectIds, you can clean them up using:
 
   rake db:mongoid:cleanup_old_collections
 

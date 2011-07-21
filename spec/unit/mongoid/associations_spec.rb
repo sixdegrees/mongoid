@@ -598,7 +598,7 @@ describe Mongoid::Associations do
     context "when using object ids" do
       before :all do
         @previous_id_type = Person._id_type
-        Person.identity :type => BSON::ObjectID
+        Person.identity :type => BSON::ObjectId
       end
 
       after :all do
@@ -608,7 +608,7 @@ describe Mongoid::Associations do
       it "sets the foreign key as an object id" do
         Game.expects(:field).with(
           "person_id",
-          :type => BSON::ObjectID,
+          :type => BSON::ObjectId,
           :inverse_class_name => "Person",
           :identity => true
         )
@@ -700,7 +700,7 @@ describe Mongoid::Associations do
   describe "#update_foreign_keys" do
 
     before do
-      Person.identity :type => BSON::ObjectID
+      Person.identity :type => BSON::ObjectId
       @game = Game.new(:score => 1)
       @person = Person.new(:title => "Sir", :game => @game)
     end
